@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParkSmart — Intelligent Parking Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c12;
+    --bg2: #0d1420;
+    --bg3: #111c2e;
+    --surface: #131d2e;
+    --surface2: #192539;
+    --border: rgba(99,160,255,0.12);
+    --border2: rgba(99,160,255,0.22);
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.25);
+    --green: #10b981;
+    --green-dim: rgba(16,185,129,0.15);
+    --green-border: rgba(16,185,129,0.35);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --red-border: rgba(239,68,68,0.3);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.13);
+    --text: #e8f0fe;
+    --text2: #8ba7cc;
+    --text3: #4d6a8a;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --r: 12px;
+    --r2: 18px;
+    --r3: 24px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% -20%, rgba(59,130,246,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(16,185,129,0.05) 0%, transparent 50%);
+  }
+
+  /* ── GRID NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M0 0v40M40 0v40M0 0h40M0 40h40' stroke='rgba(99,160,255,0.03)' stroke-width='1'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-family: var(--font-head); font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo-text span { color: var(--accent2); }
+  .live-badge {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--green-dim); border: 1px solid var(--green-border);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; font-weight: 500; color: var(--green);
+    font-family: var(--font-head); letter-spacing: 0.5px;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+    animation: pulse-dot 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ── DASHBOARD STATS ── */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin: 28px 0 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 20px 22px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+  .stat-card.green::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+  .stat-card.red::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text3); font-family: var(--font-head); margin-bottom: 8px; }
+  .stat-value { font-family: var(--font-head); font-size: 32px; font-weight: 800; }
+  .stat-value.blue { color: var(--accent2); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+  /* ── SECTION TITLE ── */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--text); }
+  .section-title span { color: var(--text3); font-weight: 400; font-size: 14px; margin-left: 8px; }
+
+  /* ── PARKING SLOTS GRID ── */
+  .slots-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 580px) { .slots-grid { grid-template-columns: 1fr; } }
+
+  .slot-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r3);
+    padding: 28px 24px;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    user-select: none;
+  }
+  .slot-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(59,130,246,0.06), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .slot-card:not(.booked):hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(59,130,246,0.18);
+  }
+  .slot-card:not(.booked):hover::after { opacity: 1; }
+  .slot-card.selected {
+    border-color: var(--accent);
+    background: var(--surface2);
+    box-shadow: 0 0 0 1px var(--accent), 0 16px 48px rgba(59,130,246,0.22);
+    transform: translateY(-2px);
+  }
+  .slot-card.selected::after { opacity: 1; }
+  .slot-card.booked {
+    cursor: not-allowed; opacity: 0.65;
+    border-color: var(--red-border);
+    background: #0f111a;
+  }
+  .slot-card.booked::after {
+    content: ''; opacity: 1;
+    background: linear-gradient(135deg, rgba(239,68,68,0.04), transparent);
+  }
+  .slot-card.scanning { animation: scanning-pulse 0.8s ease-in-out infinite; }
+  @keyframes scanning-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); border-color: var(--amber); }
+    50% { box-shadow: 0 0 0 8px rgba(245,158,11,0); border-color: rgba(245,158,11,0.6); }
+  }
+
+  .slot-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .slot-number {
+    font-family: var(--font-head); font-size: 13px; font-weight: 600;
+    color: var(--text3); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .slot-status-badge {
+    display: flex; align-items: center; gap: 6px;
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 11px; font-weight: 600; font-family: var(--font-head);
+    letter-spacing: 0.5px; text-transform: uppercase;
+    transition: all 0.3s;
+  }
+  .slot-status-badge.available { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+  .slot-status-badge.booked { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); }
+  .slot-status-badge.scanning-badge { background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.35); color: var(--amber); }
+
+  .slot-icon-area {
+    display: flex; align-items: center; justify-content: center;
+    width: 72px; height: 72px; border-radius: 18px; margin: 0 0 20px;
+    transition: all 0.3s;
+  }
+  .slot-icon-area.available { background: rgba(59,130,246,0.1); border: 1.5px solid rgba(59,130,246,0.2); }
+  .slot-icon-area.booked { background: var(--red-dim); border: 1.5px solid var(--red-border); }
+  .slot-icon { font-size: 32px; }
+
+  .slot-id { font-family: var(--font-head); font-size: 26px; font-weight: 800; margin-bottom: 6px; letter-spacing: -1px; }
+  .slot-desc { font-size: 13px; color: var(--text3); }
+  .slot-card.booked .slot-desc { color: var(--red); opacity: 0.7; }
+
+  .slot-booked-by { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .slot-booked-name { font-size: 13px; color: var(--text2); }
+  .slot-booked-name strong { color: var(--text); font-weight: 500; }
+
+  /* ── BOOKINGS HISTORY ── */
+  .bookings-section { margin-top: 10px; }
+  .booking-item {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px 20px;
+    margin-bottom: 10px;
+    animation: fade-in-up 0.4s ease;
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .booking-slot-badge {
+    min-width: 44px; height: 44px; border-radius: 10px;
+    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--accent2);
+  }
+  .booking-info { flex: 1; }
+  .booking-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .booking-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .booking-time { font-size: 12px; color: var(--text3); text-align: right; white-space: nowrap; }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+    z-index: 100; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; animation: overlay-in 0.25s ease; }
+  @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--r3);
+    width: 100%; max-width: 480px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+    animation: modal-in 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.88) translateY(24px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    padding: 28px 28px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
+  .modal-subtitle { font-size: 13px; color: var(--text3); margin-top: 4px; }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text2); font-size: 16px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .modal-close:hover { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+
+  .modal-body { padding: 24px 28px; }
+  .modal-step { display: none; }
+  .modal-step.active { display: block; }
+
+  /* ── FORM ── */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; display: block; font-family: var(--font-head); }
+  .form-input {
+    width: 100%; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; color: var(--text); font-family: var(--font-body); font-size: 14px;
+    outline: none; transition: all 0.25s; -webkit-appearance: none; appearance: none;
+  }
+  .form-input::placeholder { color: var(--text3); }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); background: var(--surface2); }
+  select.form-input { cursor: pointer; }
+  select.form-input option { background: var(--bg2); }
+
+  .vehicle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .vehicle-opt {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 14px 10px;
+    cursor: pointer; text-align: center;
+    transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .vehicle-opt:hover { border-color: var(--border2); background: var(--surface2); }
+  .vehicle-opt.selected { border-color: var(--accent); background: rgba(59,130,246,0.08); }
+  .vehicle-opt .v-icon { font-size: 24px; }
+  .vehicle-opt .v-label { font-size: 12px; font-weight: 500; color: var(--text2); font-family: var(--font-head); }
+  .vehicle-opt.selected .v-label { color: var(--accent2); }
+
+  /* ── OTP ── */
+  .otp-sent-msg {
+    background: var(--green-dim); border: 1px solid var(--green-border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px; font-size: 13px; color: var(--green);
+  }
+  .otp-inputs { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+  .otp-digit {
+    width: 50px; height: 60px; text-align: center;
+    background: var(--surface); border: 2px solid var(--border2);
+    border-radius: 12px; color: var(--text); font-family: var(--font-head);
+    font-size: 24px; font-weight: 700; outline: none;
+    transition: all 0.2s;
+  }
+  .otp-digit:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); background: var(--surface2); }
+  .otp-digit.filled { border-color: var(--accent2); }
+  .otp-digit.error { border-color: var(--red); animation: shake 0.4s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%,60% { transform: translateX(-5px); }
+    40%,80% { transform: translateX(5px); }
+  }
+  .otp-timer { text-align: center; font-size: 13px; color: var(--text3); margin-bottom: 8px; }
+  .otp-timer span { color: var(--amber); font-weight: 600; font-family: var(--font-head); }
+  .otp-resend-btn {
+    background: none; border: none; color: var(--accent2); font-size: 13px; cursor: pointer;
+    font-family: var(--font-body); text-decoration: underline; display: block; margin: 0 auto;
+    padding: 4px 8px;
+  }
+  .otp-resend-btn:disabled { color: var(--text3); cursor: not-allowed; text-decoration: none; }
+  .otp-error-msg { color: var(--red); font-size: 13px; text-align: center; min-height: 18px; margin-bottom: 10px; }
+  .demo-otp-hint {
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; color: var(--amber); margin-top: 12px;
+    display: flex; gap: 8px; align-items: center;
+  }
+
+  /* ── CONFIRMATION ── */
+  .confirm-screen { text-align: center; }
+  .confirm-animation {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: var(--green-dim); border: 2px solid var(--green-border);
+    margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    animation: confirm-pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes confirm-pop {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .confirm-title { font-family: var(--font-head); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .confirm-sub { font-size: 14px; color: var(--text3); margin-bottom: 28px; }
+
+  .ticket-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--r2); overflow: hidden; text-align: left;
+    margin: 0 0 24px; position: relative;
+  }
+  .ticket-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+  }
+  .ticket-header {
+    padding: 20px 22px 16px;
+    border-bottom: 1px dashed rgba(99,160,255,0.2);
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .ticket-booking-id { font-size: 11px; color: var(--text3); letter-spacing: 1px; font-family: var(--font-head); margin-bottom: 4px; }
+  .ticket-id-val { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--accent2); }
+  .ticket-slot-big { font-family: var(--font-head); font-size: 40px; font-weight: 800; color: var(--accent2); line-height: 1; }
+  .ticket-slot-lbl { font-size: 11px; color: var(--text3); text-align: right; font-family: var(--font-head); letter-spacing: 0.5px; }
+  .ticket-body { padding: 18px 22px; }
+  .ticket-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .ticket-row:last-child { margin-bottom: 0; }
+  .ticket-key { font-size: 12px; color: var(--text3); }
+  .ticket-val { font-size: 13px; color: var(--text); font-weight: 500; }
+  .ticket-punches {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    left: -14px; right: -14px;
+    display: flex; justify-content: space-between; pointer-events: none;
+  }
+  .ticket-punch { width: 28px; height: 28px; background: var(--bg2); border-radius: 50%; border: 1px solid var(--border); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 28px; border-radius: 10px;
+    font-family: var(--font-head); font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none; outline: none;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    width: 100%;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+  }
+  .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-ghost { background: var(--surface); border: 1px solid var(--border2); color: var(--text2); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+  .btn-success { background: linear-gradient(135deg, #059669, #10b981); color: #fff; box-shadow: 0 4px 16px rgba(16,185,129,0.3); }
+  .btn-success:hover { background: linear-gradient(135deg, #047857, #059669); transform: translateY(-1px); }
+  .btn-row { display: flex; gap: 12px; }
+  .btn-row .btn { flex: 1; }
+
+  /* ── TOAST ── */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+  .toast {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--r); padding: 14px 18px;
+    min-width: 280px; max-width: 360px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    animation: toast-slide 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes toast-slide {
+    from { opacity: 0; transform: translateX(60px) scale(0.9); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  .toast.hiding { animation: toast-out 0.3s ease forwards; }
+  @keyframes toast-out {
+    to { opacity: 0; transform: translateX(40px) scale(0.9); }
+  }
+  .toast-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .toast-content { flex: 1; }
+  .toast-title { font-size: 13px; font-weight: 600; font-family: var(--font-head); color: var(--text); }
+  .toast-msg { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .toast.info { border-left: 3px solid var(--accent); }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.warning { border-left: 3px solid var(--amber); }
+  .toast.error { border-left: 3px solid var(--red); }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.25);
+    border-top-color: #fff;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── HIDDEN ADMIN ZONES ── */
+  .admin-zone { position: fixed; opacity: 0; width: 60px; height: 60px; z-index: 9999; cursor: default; }
+  #zone-book { top: 0; right: 0; }
+  #zone-clear { bottom: 0; right: 0; }
+
+  /* ── FOOTER ── */
+  .footer { text-align: center; padding: 24px 0 0; border-top: 1px solid var(--border); font-size: 12px; color: var(--text3); }
+
+  /* ── MISC ── */
+  .empty-bookings { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+  .progress-steps { display: flex; align-items: center; gap: 0; margin-bottom: 24px; }
+  .step-item { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; font-family: var(--font-head);
+    color: var(--text3); flex-shrink: 0; transition: all 0.3s; background: var(--surface);
+  }
+  .step-dot.active { border-color: var(--accent); color: var(--accent2); background: rgba(59,130,246,0.12); }
+  .step-dot.done { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+  .step-label { font-size: 11px; color: var(--text3); font-family: var(--font-head); }
+  .step-label.active { color: var(--accent2); }
+  .step-label.done { color: var(--green); }
+  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 4px; }
+  .step-line.done { background: var(--green); }
+
+  @media (max-width: 520px) {
+    .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+    .modal-header, .modal-body { padding-left: 18px; padding-right: 18px; }
+    .otp-digit { width: 44px; height: 56px; font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toasts"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🅿</div>
+      <div class="logo-text">Park<span>Smart</span></div>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Live Parking Status
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total Slots</div>
+      <div class="stat-value blue" id="stat-total">4</div>
+      <div class="stat-sub">This facility</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Available</div>
+      <div class="stat-value green" id="stat-available">4</div>
+      <div class="stat-sub">Ready to book</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-label">Occupied</div>
+      <div class="stat-value red" id="stat-booked">0</div>
+      <div class="stat-sub">Active now</div>
+    </div>
+  </div>
+
+  <!-- SLOTS -->
+  <div class="section-head">
+    <div class="section-title">Parking Bays <span>Select a slot to book</span></div>
+  </div>
+  <div class="slots-grid" id="slots-grid"></div>
+
+  <!-- BOOKINGS LOG -->
+  <div class="bookings-section">
+    <div class="section-head">
+      <div class="section-title">Recent Bookings <span id="booking-count-label"></span></div>
+    </div>
+    <div id="bookings-list">
+      <div class="empty-bookings" id="empty-msg">No bookings yet. Select a slot above to get started.</div>
+    </div>
+  </div>
+
+  <div class="footer">ParkSmart &copy; 2025 · IoT Smart Parking Platform · Version 2.4.1</div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="main-modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">Reserve Parking Slot</div>
+        <div class="modal-subtitle" id="modal-subtitle">Complete the details below</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- PROGRESS -->
+      <div class="progress-steps" id="progress-steps">
+        <div class="step-item">
+          <div class="step-dot active" id="sdot-1">1</div>
+          <div class="step-label active" id="slbl-1">Details</div>
+        </div>
+        <div class="step-line" id="sline-1"></div>
+        <div class="step-item">
+          <div class="step-dot" id="sdot-2">2</div>
+          <div class="step-label" id="slbl-2">Verify OTP</div>
+        </div>
+        <div class="step-line" id="sline-2"></div>
+        <div class="step-item">
+          <div class="step-dot" id="sdot-3">✓</div>
+          <div class="step-label" id="slbl-3">Confirmed</div>
+        </div>
+      </div>
+
+      <!-- STEP 1: BOOKING FORM -->
+      <div class="modal-step active" id="step-1">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" type="text" id="inp-name" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input class="form-input" type="tel" id="inp-phone" placeholder="+91 XXXXX XXXXX">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vehicle Type</label>
+          <div class="vehicle-grid" id="vehicle-grid">
+            <div class="vehicle-opt selected" data-vehicle="Car" onclick="selectVehicle(this)">
+              <div class="v-icon">🚗</div><div class="v-label">Car</div>
+            </div>
+            <div class="vehicle-opt" data-vehicle="Bike" onclick="selectVehicle(this)">
+              <div class="v-icon">🏍️</div><div class="v-label">Bike</div>
+            </div>
+            <div class="vehicle-opt" data-vehicle="Other" onclick="selectVehicle(this)">
+              <div class="v-icon">🚐</div><div class="v-label">Other</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Booking Date</label>
+            <input class="form-input" type="date" id="inp-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Time</label>
+            <input class="form-input" type="time" id="inp-start">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Time</label>
+          <input class="form-input" type="time" id="inp-end">
+        </div>
+        <button class="btn btn-primary" id="btn-next-otp" onclick="proceedToOTP()">
+          <span id="btn-next-text">Continue to Verify</span>
+          <div class="spinner" id="btn-next-spinner"></div>
+        </button>
+      </div>
+
+      <!-- STEP 2: OTP -->
+      <div class="modal-step" id="step-2">
+        <div class="otp-sent-msg">
+          <span>✉️</span>
+          <span>OTP sent to <strong id="otp-phone-display"></strong></span>
+        </div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:4px;text-align:center;">Enter the 6-digit OTP</p>
+        <div class="otp-inputs" id="otp-inputs">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this,0)" onkeydown="otpKeydown(event,0)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this,1)" onkeydown="otpKeydown(event,1)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this,2)" onkeydown="otpKeydown(event,2)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this,3)" onkeydown="otpKeydown(event,3)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this,4)" onkeydown="otpKeydown(event,4)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this,5)" onkeydown="otpKeydown(event,5)">
+        </div>
+        <div class="otp-error-msg" id="otp-error"></div>
+        <div class="otp-timer" id="otp-timer">Resend in <span id="otp-countdown">30</span>s</div>
+        <button class="otp-resend-btn" id="otp-resend-btn" onclick="resendOTP()" disabled>Resend OTP</button>
+        <div class="demo-otp-hint" id="otp-hint">
+          <span>🔑</span>
+          <span>Demo OTP: <strong id="demo-otp-val" style="font-family:var(--font-head);color:var(--amber);font-size:15px;"></strong></span>
+        </div>
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" id="btn-verify" onclick="verifyOTP()">
+            <span id="btn-verify-text">Verify & Confirm Booking</span>
+            <div class="spinner" id="btn-verify-spinner"></div>
+          </button>
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost" onclick="goToStep(1)">← Back</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: CONFIRMATION -->
+      <div class="modal-step" id="step-3">
+        <div class="confirm-screen">
+          <div class="confirm-animation">✓</div>
+          <div class="confirm-title">Booking Confirmed!</div>
+          <div class="confirm-sub">Your parking slot has been reserved successfully.</div>
+
+          <div class="ticket-card" id="ticket-card">
+            <div class="ticket-header">
+              <div>
+                <div class="ticket-booking-id">BOOKING ID</div>
+                <div class="ticket-id-val" id="tc-id">PS-000000</div>
+              </div>
+              <div>
+                <div class="ticket-slot-big" id="tc-slot">S1</div>
+                <div class="ticket-slot-lbl">SLOT</div>
+              </div>
+            </div>
+            <div style="position:relative;height:1px;background:none;overflow:visible;">
+              <div class="ticket-punches">
+                <div class="ticket-punch"></div>
+                <div class="ticket-punch"></div>
+              </div>
+            </div>
+            <div class="ticket-body">
+              <div class="ticket-row"><span class="ticket-key">Name</span><span class="ticket-val" id="tc-name">—</span></div>
+              <div class="ticket-row"><span class="ticket-key">Vehicle</span><span class="ticket-val" id="tc-vehicle">—</span></div>
+              <div class="ticket-row"><span class="ticket-key">Date</span><span class="ticket-val" id="tc-date">—</span></div>
+              <div class="ticket-row"><span class="ticket-key">Time</span><span class="ticket-val" id="tc-time">—</span></div>
+              <div class="ticket-row"><span class="ticket-key">Phone</span><span class="ticket-val" id="tc-phone">—</span></div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-success" onclick="downloadTicket()">⬇ Download Ticket</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Done</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- HIDDEN ADMIN ZONES -->
+<div class="admin-zone" id="zone-book" ondblclick="adminBookNext()"></div>
+<div class="admin-zone" id="zone-clear" ondblclick="adminClearCurrent()"></div>
+
+<script>
+  /* ─────────────────────────────────────
+     STATE
+  ───────────────────────────────────── */
+  const SLOTS_KEY = 'parksmart_slots';
+  const BOOKINGS_KEY = 'parksmart_bookings';
+
+  let slots = loadSlots();
+  let bookings = loadBookings();
+  let selectedSlot = null;
+  let currentBookingSlot = null;
+  let currentOTP = null;
+  let otpTimer = null;
+  let selectedVehicle = 'Car';
+  let lastAdminSlot = 0;
+
+  function defaultSlots() {
+    return [1,2,3,4].map(n => ({ id: n, label: `S${n}`, booked: false, bookedBy: null }));
+  }
+  function loadSlots() {
+    try { const d = JSON.parse(localStorage.getItem(SLOTS_KEY)); return d && d.length === 4 ? d : defaultSlots(); }
+    catch { return defaultSlots(); }
+  }
+  function loadBookings() {
+    try { return JSON.parse(localStorage.getItem(BOOKINGS_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveSlots() { localStorage.setItem(SLOTS_KEY, JSON.stringify(slots)); }
+  function saveBookings() { localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings)); }
+
+  /* ─────────────────────────────────────
+     RENDER SLOTS
+  ───────────────────────────────────── */
+  function renderSlots() {
+    const grid = document.getElementById('slots-grid');
+    grid.innerHTML = '';
+    let avail = 0;
+    slots.forEach(slot => {
+      if (!slot.booked) avail++;
+      const card = document.createElement('div');
+      card.className = `slot-card${slot.booked ? ' booked' : ''}${selectedSlot === slot.id && !slot.booked ? ' selected' : ''}`;
+      card.id = `slot-card-${slot.id}`;
+      card.onclick = () => selectSlot(slot.id);
+
+      const vehicleIcon = slot.bookedBy ? getVehicleIcon(slot.bookedBy.vehicle) : '🚗';
+      const bookedSection = slot.booked && slot.bookedBy ? `
+        <div class="slot-booked-by">
+          <div class="slot-booked-name">Booked by: <strong>${slot.bookedBy.name}</strong></div>
+          <div class="slot-booked-name" style="margin-top:3px;font-size:12px;">${slot.bookedBy.timeLabel || ''}</div>
+        </div>` : '';
+
+      card.innerHTML = `
+        <div class="slot-top">
+          <div class="slot-number">Bay ${slot.id}</div>
+          <div class="slot-status-badge ${slot.booked ? 'booked' : 'available'}">
+            <span>${slot.booked ? '●' : '●'}</span>
+            ${slot.booked ? 'Occupied' : 'Available'}
+          </div>
+        </div>
+        <div class="slot-icon-area ${slot.booked ? 'booked' : 'available'}">
+          <div class="slot-icon">${slot.booked ? vehicleIcon : '🅿️'}</div>
+        </div>
+        <div class="slot-id">${slot.label}</div>
+        <div class="slot-desc">${slot.booked ? 'This slot is currently occupied' : 'Click to reserve this slot'}</div>
+        ${bookedSection}
+      `;
+      grid.appendChild(card);
+    });
+
+    document.getElementById('stat-available').textContent = avail;
+    document.getElementById('stat-booked').textContent = 4 - avail;
+  }
+
+  function getVehicleIcon(v) {
+    if (!v) return '🚗';
+    if (v === 'Car') return '🚗';
+    if (v === 'Bike') return '🏍️';
+    return '🚐';
+  }
+
+  function selectSlot(id) {
+    const slot = slots.find(s => s.id === id);
+    if (!slot || slot.booked) return;
+    selectedSlot = id;
+    renderSlots();
+    setTimeout(() => openModal(id), 120);
+  }
+
+  /* ─────────────────────────────────────
+     RENDER BOOKINGS
+  ───────────────────────────────────── */
+  function renderBookings() {
+    const list = document.getElementById('bookings-list');
+    const empty = document.getElementById('empty-msg');
+    const lbl = document.getElementById('booking-count-label');
+
+    if (bookings.length === 0) {
+      list.innerHTML = '<div class="empty-bookings" id="empty-msg">No bookings yet. Select a slot above to get started.</div>';
+      lbl.textContent = '';
+      return;
+    }
+    lbl.textContent = `(${bookings.length} total)`;
+    const recent = [...bookings].reverse().slice(0, 8);
+    list.innerHTML = recent.map(b => `
+      <div class="booking-item">
+        <div class="booking-slot-badge">${b.slot}</div>
+        <div class="booking-info">
+          <div class="booking-name">${b.name}</div>
+          <div class="booking-meta">${b.vehicle} · ${b.date} · ${b.start}–${b.end}</div>
+        </div>
+        <div class="booking-time">${b.id}</div>
+      </div>
+    `).join('');
+  }
+
+  /* ─────────────────────────────────────
+     MODAL
+  ───────────────────────────────────── */
+  function openModal(slotId) {
+    currentBookingSlot = slotId;
+    const slot = slots.find(s => s.id === slotId);
+    document.getElementById('modal-title').textContent = `Reserve ${slot.label}`;
+    document.getElementById('modal-subtitle').textContent = `Bay ${slotId} · Premium Covered Parking`;
+    document.getElementById('modal-overlay').classList.add('show');
+    goToStep(1);
+    // defaults
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('inp-date').value = today;
+    document.getElementById('inp-start').value = '09:00';
+    document.getElementById('inp-end').value = '11:00';
+    document.getElementById('inp-name').focus();
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+    selectedSlot = null;
+    clearOTPTimer();
+    renderSlots();
+  }
+
+  function goToStep(n) {
+    [1,2,3].forEach(i => {
+      document.getElementById(`step-${i}`).classList.toggle('active', i === n);
+      const dot = document.getElementById(`sdot-${i}`);
+      const lbl = document.getElementById(`slbl-${i}`);
+      if (i < n) { dot.classList.add('done'); dot.classList.remove('active'); lbl.classList.add('done'); lbl.classList.remove('active'); }
+      else if (i === n) { dot.classList.add('active'); dot.classList.remove('done'); lbl.classList.add('active'); lbl.classList.remove('done'); }
+      else { dot.classList.remove('active','done'); lbl.classList.remove('active','done'); }
+      if (i < n) document.getElementById(`sline-${i}`)?.classList.add('done');
+      else document.getElementById(`sline-${i}`)?.classList.remove('done');
+    });
+  }
+
+  /* ─────────────────────────────────────
+     VEHICLE SELECT
+  ───────────────────────────────────── */
+  function selectVehicle(el) {
+    document.querySelectorAll('.vehicle-opt').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedVehicle = el.dataset.vehicle;
+  }
+
+  /* ─────────────────────────────────────
+     STEP 1 → OTP
+  ───────────────────────────────────── */
+  function proceedToOTP() {
+    const name = document.getElementById('inp-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    const date = document.getElementById('inp-date').value;
+    const start = document.getElementById('inp-start').value;
+    const end = document.getElementById('inp-end').value;
+
+    if (!name) { showToast('warning', 'Missing Info', 'Please enter your full name.'); return; }
+    if (!phone || phone.length < 8) { showToast('warning', 'Missing Info', 'Please enter a valid phone number.'); return; }
+    if (!date) { showToast('warning', 'Missing Info', 'Please select a booking date.'); return; }
+    if (!start || !end) { showToast('warning', 'Missing Info', 'Please select start and end time.'); return; }
+    if (start >= end) { showToast('warning', 'Invalid Time', 'End time must be after start time.'); return; }
+
+    const btn = document.getElementById('btn-next-otp');
+    btn.disabled = true;
+    document.getElementById('btn-next-text').style.display = 'none';
+    document.getElementById('btn-next-spinner').style.display = 'block';
+
+    setTimeout(() => {
+      btn.disabled = false;
+      document.getElementById('btn-next-text').style.display = '';
+      document.getElementById('btn-next-spinner').style.display = 'none';
+      generateAndSendOTP(phone);
+      goToStep(2);
+    }, 1200);
+  }
+
+  function generateAndSendOTP(phone) {
+    currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('otp-phone-display').textContent = phone;
+    document.getElementById('demo-otp-val').textContent = currentOTP;
+    console.log('%c🔐 ParkSmart Demo OTP: ' + currentOTP, 'color:#60a5fa;font-size:16px;font-weight:bold;');
+    clearOTPInputs();
+    document.getElementById('otp-error').textContent = '';
+    startOTPTimer();
+    showToast('info', 'OTP Sent', `A 6-digit OTP has been sent to your mobile.`);
+  }
+
+  /* ─────────────────────────────────────
+     OTP INPUTS
+  ───────────────────────────────────── */
+  function otpInput(el, idx) {
+    el.value = el.value.replace(/[^0-9]/g, '');
+    if (el.value) {
+      el.classList.add('filled'); el.classList.remove('error');
+      const inputs = document.querySelectorAll('.otp-digit');
+      if (idx < 5) inputs[idx + 1].focus();
+      else verifyOTPAuto();
+    }
+  }
+  function otpKeydown(e, idx) {
+    if (e.key === 'Backspace') {
+      const inputs = document.querySelectorAll('.otp-digit');
+      if (!inputs[idx].value && idx > 0) { inputs[idx-1].value = ''; inputs[idx-1].classList.remove('filled'); inputs[idx-1].focus(); }
+      else { inputs[idx].classList.remove('filled'); }
+    }
+  }
+  function clearOTPInputs() {
+    document.querySelectorAll('.otp-digit').forEach(i => { i.value = ''; i.classList.remove('filled','error'); });
+    document.querySelectorAll('.otp-digit')[0].focus();
+  }
+  function getOTPValue() {
+    return Array.from(document.querySelectorAll('.otp-digit')).map(i => i.value).join('');
+  }
+  function verifyOTPAuto() {
+    const val = getOTPValue();
+    if (val.length === 6) setTimeout(verifyOTP, 200);
+  }
+
+  /* ─────────────────────────────────────
+     OTP TIMER
+  ───────────────────────────────────── */
+  function startOTPTimer() {
+    let remaining = 30;
+    document.getElementById('otp-countdown').textContent = remaining;
+    document.getElementById('otp-timer').style.display = 'block';
+    document.getElementById('otp-resend-btn').disabled = true;
+    clearOTPTimer();
+    otpTimer = setInterval(() => {
+      remaining--;
+      document.getElementById('otp-countdown').textContent = remaining;
+      if (remaining <= 0) {
+        clearOTPTimer();
+        document.getElementById('otp-timer').style.display = 'none';
+        document.getElementById('otp-resend-btn').disabled = false;
+      }
+    }, 1000);
+  }
+  function clearOTPTimer() { if (otpTimer) { clearInterval(otpTimer); otpTimer = null; } }
+  function resendOTP() {
+    const phone = document.getElementById('inp-phone').value.trim();
+    generateAndSendOTP(phone);
+  }
+
+  /* ─────────────────────────────────────
+     VERIFY OTP → CONFIRM
+  ───────────────────────────────────── */
+  function verifyOTP() {
+    const val = getOTPValue();
+    if (val.length < 6) { document.getElementById('otp-error').textContent = 'Please enter the complete 6-digit OTP.'; return; }
+
+    document.getElementById('btn-verify').disabled = true;
+    document.getElementById('btn-verify-text').style.display = 'none';
+    document.getElementById('btn-verify-spinner').style.display = 'block';
+
+    setTimeout(() => {
+      document.getElementById('btn-verify').disabled = false;
+      document.getElementById('btn-verify-text').style.display = '';
+      document.getElementById('btn-verify-spinner').style.display = 'none';
+
+      if (val !== currentOTP) {
+        document.getElementById('otp-error').textContent = 'Incorrect OTP. Please try again.';
+        document.querySelectorAll('.otp-digit').forEach(i => { i.classList.add('error'); setTimeout(() => i.classList.remove('error'), 600); });
+        showToast('error', 'Invalid OTP', 'The OTP you entered is incorrect.');
+        return;
+      }
+
+      confirmBooking();
+    }, 900);
+  }
+
+  function confirmBooking() {
+    const name = document.getElementById('inp-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    const date = document.getElementById('inp-date').value;
+    const start = document.getElementById('inp-start').value;
+    const end = document.getElementById('inp-end').value;
+    const slotIdx = slots.findIndex(s => s.id === currentBookingSlot);
+    if (slotIdx === -1) return;
+
+    const bookingId = 'PS-' + Math.random().toString(36).substr(2,7).toUpperCase();
+    const timeLabel = `${start} – ${end}`;
+
+    slots[slotIdx].booked = true;
+    slots[slotIdx].bookedBy = { name, phone, vehicle: selectedVehicle, date, start, end, timeLabel };
+    saveSlots();
+
+    const record = { id: bookingId, slot: slots[slotIdx].label, slotId: currentBookingSlot, name, phone, vehicle: selectedVehicle, date, start, end, ts: Date.now() };
+    bookings.push(record);
+    saveBookings();
+
+    // Fill ticket
+    document.getElementById('tc-id').textContent = bookingId;
+    document.getElementById('tc-slot').textContent = slots[slotIdx].label;
+    document.getElementById('tc-name').textContent = name;
+    document.getElementById('tc-vehicle').textContent = `${getVehicleIcon(selectedVehicle)} ${selectedVehicle}`;
+    document.getElementById('tc-date').textContent = formatDate(date);
+    document.getElementById('tc-time').textContent = timeLabel;
+    document.getElementById('tc-phone').textContent = phone;
+
+    clearOTPTimer();
+    goToStep(3);
+    renderSlots();
+    renderBookings();
+    selectedSlot = null;
+
+    showToast('success', 'Slot Reserved!', `${slots[slotIdx].label} booked for ${name}.`);
+
+    // Auto-clear simulation after random time
+    const autoClearDelay = (60 + Math.random() * 60) * 1000;
+    setTimeout(() => autoReleaseSlot(currentBookingSlot, slots[slotIdx].label), autoClearDelay);
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  /* ─────────────────────────────────────
+     AUTO RELEASE
+  ───────────────────────────────────── */
+  function autoReleaseSlot(slotId, label) {
+    const s = slots.find(s => s.id === slotId);
+    if (!s || !s.booked) return;
+    s.booked = false;
+    s.bookedBy = null;
+    saveSlots();
+    renderSlots();
+    renderBookings();
+    showToast('info', 'Slot Released', `${label} is now available again.`);
+  }
+
+  /* ─────────────────────────────────────
+     DOWNLOAD TICKET (fake PDF look)
+  ───────────────────────────────────── */
+  function downloadTicket() {
+    const card = document.getElementById('ticket-card');
+    const id = document.getElementById('tc-id').textContent;
+    const slot = document.getElementById('tc-slot').textContent;
+    const name = document.getElementById('tc-name').textContent;
+    const date = document.getElementById('tc-date').textContent;
+    const time = document.getElementById('tc-time').textContent;
+    const vehicle = document.getElementById('tc-vehicle').textContent;
+    const phone = document.getElementById('tc-phone').textContent;
+
+    const content = `PARKSMART — BOOKING CONFIRMATION
+================================
+Booking ID : ${id}
+Slot       : ${slot}
+Name       : ${name}
+Vehicle    : ${vehicle}
+Date       : ${date}
+Time       : ${time}
+Phone      : ${phone}
+================================
+Thank you for using ParkSmart!
+IoT Smart Parking Platform v2.4.1
+`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ParkSmart_${id}.txt`;
+    a.click();
+    showToast('success', 'Ticket Downloaded', 'Your booking confirmation has been saved.');
+  }
+
+  /* ─────────────────────────────────────
+     TOAST
+  ───────────────────────────────────── */
+  function showToast(type, title, msg, duration = 4000) {
+    const icons = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
+    const container = document.getElementById('toasts');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-icon">${icons[type]}</div><div class="toast-content"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.classList.add('hiding'); setTimeout(() => toast.remove(), 300); }, duration);
+  }
+
+  /* ─────────────────────────────────────
+     LIVE SIMULATION
+  ───────────────────────────────────── */
+  function simulateVehicle() {
+    const free = slots.filter(s => !s.booked);
+    if (free.length === 0) return;
+    const pick = free[Math.floor(Math.random() * free.length)];
+    showToast('warning', 'Vehicle Detected', `Sensor triggered in Bay ${pick.id} · ${pick.label}`);
+
+    // flash scanning state
+    const card = document.getElementById(`slot-card-${pick.id}`);
+    if (card) {
+      card.classList.add('scanning');
+      const badge = card.querySelector('.slot-status-badge');
+      if (badge) { badge.className = 'slot-status-badge scanning-badge'; badge.innerHTML = '<span>◌</span> Scanning'; }
+    }
+    setTimeout(() => {
+      if (card) card.classList.remove('scanning');
+      renderSlots();
+    }, 1500);
+  }
+
+  // Simulate a vehicle detection every 25-45 seconds
+  setInterval(() => {
+    if (Math.random() < 0.4) simulateVehicle();
+  }, 30000);
+
+  /* ─────────────────────────────────────
+     HIDDEN ADMIN ZONES
+  ───────────────────────────────────── */
+  function adminBookNext() {
+    // Find next available slot cycling lastAdminSlot
+    const tries = slots.length;
+    for (let i = 0; i < tries; i++) {
+      lastAdminSlot = (lastAdminSlot % slots.length) + 1;
+      const s = slots.find(s => s.id === lastAdminSlot);
+      if (s && !s.booked) {
+        const card = document.getElementById(`slot-card-${s.id}`);
+        if (card) {
+          card.classList.add('scanning');
+          const badge = card.querySelector('.slot-status-badge');
+          if (badge) { badge.className = 'slot-status-badge scanning-badge'; badge.innerHTML = '<span>◌</span> Scanning'; }
+        }
+        showToast('warning', 'Scanning...', `Sensor active on Bay ${s.id} · ${s.label}`);
+        setTimeout(() => {
+          s.booked = true;
+          s.bookedBy = { name: 'Walk-in Customer', phone: 'N/A', vehicle: 'Car', date: new Date().toISOString().split('T')[0], start: '--', end: '--', timeLabel: 'Walk-in' };
+          saveSlots();
+          renderSlots();
+          renderBookings();
+          showToast('info', 'Slot Occupied', `${s.label} is now marked as occupied.`);
+        }, 1200);
+        break;
+      }
+    }
+  }
+
+  function adminClearCurrent() {
+    // Clear the first booked slot found
+    const booked = slots.find(s => s.booked);
+    if (!booked) { showToast('info', 'All Clear', 'No occupied slots to release.'); return; }
+    booked.booked = false;
+    booked.bookedBy = null;
+    saveSlots();
+    renderSlots();
+    renderBookings();
+    showToast('success', 'Slot Available', `${booked.label} is now available for booking.`);
+  }
+
+  /* ─────────────────────────────────────
+     CLOSE ON OVERLAY CLICK
+  ───────────────────────────────────── */
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  /* ─────────────────────────────────────
+     INIT
+  ───────────────────────────────────── */
+  renderSlots();
+  renderBookings();
+
+  // Welcome toast
+  setTimeout(() => {
+    showToast('info', 'ParkSmart Online', 'Live sensor monitoring is active.');
+  }, 800);
+</script>
+</body>
+</html>
